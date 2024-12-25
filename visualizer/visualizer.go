@@ -8,8 +8,20 @@ import (
 
 // RenderFrequencies renders the frequency bars on the terminal and centers the content
 func RenderFrequencies(frequencies []float64) {
-	maxHeight := 25 // Maximum height of the bars
+	maxHeight := 20 // Default maximum height of the bars
 	numBars := 40   // Number of bars
+
+	// Get current tmux pane size
+	width, height, err := getTerminalSize()
+	if err != nil {
+		fmt.Println("Error getting terminal size:", err)
+		return
+	}
+
+	// Adjust maxHeight to fit within the terminal pane height
+	if height < maxHeight {
+		maxHeight = height - 2 // Leave some space for the terminal prompt
+	}
 
 	// Normalize and scale the frequencies
 	scaledHeights := make([]int, numBars)
@@ -19,13 +31,6 @@ func RenderFrequencies(frequencies []float64) {
 			height = maxHeight
 		}
 		scaledHeights[i] = height
-	}
-
-	// Get full terminal size, not tmux pane size
-	width, height, err := getTerminalSize()
-	if err != nil {
-		fmt.Println("Error getting terminal size:", err)
-		return
 	}
 
 	// Calculate the position to center the content horizontally
@@ -50,7 +55,9 @@ func RenderFrequencies(frequencies []float64) {
 		// Print the bars for the current row
 		for _, height := range scaledHeights {
 			if height >= row {
-				fmt.Print("█ ") // Print filled bar
+				// Color the bar based on the height
+				colorCode := getColorCode(height)
+				fmt.Printf("\033[%dm█ \033[0m", colorCode) // Print filled bar with color
 			} else {
 				fmt.Print("  ") // Print empty space
 			}
@@ -59,6 +66,18 @@ func RenderFrequencies(frequencies []float64) {
 
 	// Reset cursor to the top to avoid scrolling (move cursor back to top-left)
 	fmt.Print("\033[H")
+}
+
+// getColorCode returns a color code based on the height of the bar
+func getColorCode(height int) int {
+	// Example of color scaling: green for low, yellow for medium, red for high
+	if height <= 8 {
+		return 32 // Green
+	} else if height <= 16 {
+		return 33 // Yellow
+	} else {
+		return 31 // Red
+	}
 }
 
 // getTerminalSize gets the current terminal width and height

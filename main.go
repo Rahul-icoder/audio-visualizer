@@ -38,7 +38,7 @@ func runAudioVisualizer(bufferSize int) error {
 		// Step 3: Render visualizer
 		visualizer.RenderFrequencies(frequencies)
 
-		// Step 4: Control frame rate (30 FPS)
+		// Step 4: Control frame rate (10 FPS)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
